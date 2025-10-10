@@ -624,7 +624,7 @@ const ProductsPage = () => {
                   
                       {/* es comments ko bi un comments krna hai  */}
 
-                      {/* <Button
+                      <Button
                         size="small"
                         variant="contained"
                         color={item.dealOfTheDay ? "success" : "primary"}
@@ -632,7 +632,7 @@ const ProductsPage = () => {
                         sx={{ ml: 1 }}
                       >
                         {item.dealOfTheDay ? "Active Deal" : "Make Deal"}
-                      </Button> */}
+                      </Button>
 
 
 
