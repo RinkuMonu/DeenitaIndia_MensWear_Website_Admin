@@ -371,7 +371,7 @@ function Dashboard() {
 
         {/* Top Selling Product Card */}
 
-        {/* <Grid item>
+        <Grid item>
           <Card
             sx={{
               minWidth: 250,
@@ -406,11 +406,11 @@ function Dashboard() {
               )}
             </CardContent>
           </Card>
-        </Grid> */}
+        </Grid> 
 
         {/* Top Selling Category Card */}
 
-        {/* <Grid item>
+         <Grid item>
           <Card
             sx={{
               minWidth: 250,
@@ -443,7 +443,7 @@ function Dashboard() {
               )}
             </CardContent>
           </Card>
-        </Grid> */}
+        </Grid>
 
 
 

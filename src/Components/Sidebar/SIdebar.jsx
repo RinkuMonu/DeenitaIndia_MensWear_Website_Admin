@@ -433,29 +433,29 @@ function Sidebar() {
         { key: "banner-list", label: <Link to="/banners">Banners</Link> },
       ],
     },
-    // {
-    //   key: "orders",
-    //   icon: <OrderedListOutlined />,
-    //   label: "Orders",
-    //   children: [
-    //     {
-    //       key: "received-orders",
-    //       label: <Link to="/orders">Received Orders</Link>,
-    //     },
-    //   ],
-    // },
+    {
+      key: "orders",
+      icon: <OrderedListOutlined />,
+      label: "Orders",
+      children: [
+        {
+          key: "received-orders",
+          label: <Link to="/orders">Received Orders</Link>,
+        },
+      ],
+    },
 
-    // {
-    //   key: "coupons",
-    //   icon: <TagOutlined />,
-    //   label: "Coupons",
-    //   children: [
-    //     {
-    //       key: "coupons",
-    //       label: <Link to="/coupons">Coupons</Link>,
-    //     },
-    //   ],
-    // },
+    {
+      key: "coupons",
+      icon: <TagOutlined />,
+      label: "Coupons",
+      children: [
+        {
+          key: "coupons",
+          label: <Link to="/coupons">Coupons</Link>,
+        },
+      ],
+    },
     
     {
       key: "NewSletter",
@@ -468,17 +468,17 @@ function Sidebar() {
         },
       ],
     },
-  // {
-  //     key: "FAQs",
-  //     icon: <UnsubscribeIcon />,
-  //     label: "FAQs",
-  //     children: [
-  //       {
-  //         key: "FAQs",
-  //         label: <Link to="/Faqs">FAQs Manager</Link>,
-  //       },
-  //     ],
-  //   },
+  {
+      key: "FAQs",
+      icon: <UnsubscribeIcon />,
+      label: "FAQs",
+      children: [
+        {
+          key: "FAQs",
+          label: <Link to="/Faqs">FAQs Manager</Link>,
+        },
+      ],
+    },
 
     {
       key: "settings",
@@ -491,14 +491,14 @@ function Sidebar() {
         },
       ],
     },
-    // {
-    //   key: "users",
-    //   icon: <UserOutlined />,
-    //   label: "Users",
-    //   children: [
-    //     { key: "user-list", label: <Link to="/users">User list</Link> },
-    //   ],
-    // },
+    {
+      key: "users",
+      icon: <UserOutlined />,
+      label: "Users",
+      children: [
+        { key: "user-list", label: <Link to="/users">User list</Link> },
+      ],
+    },
   ];
 
   const adminMenuItems = [
