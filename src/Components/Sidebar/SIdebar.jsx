@@ -444,6 +444,7 @@ function Sidebar() {
         },
       ],
     },
+
     {
       key: "coupons",
       icon: <TagOutlined />,
@@ -455,6 +456,7 @@ function Sidebar() {
         },
       ],
     },
+    
     {
       key: "NewSletter",
       icon: <UnsubscribeIcon />,
@@ -466,6 +468,18 @@ function Sidebar() {
         },
       ],
     },
+  {
+      key: "FAQs",
+      icon: <UnsubscribeIcon />,
+      label: "FAQs",
+      children: [
+        {
+          key: "FAQs",
+          label: <Link to="/Faqs">FAQs Manager</Link>,
+        },
+      ],
+    },
+
     {
       key: "settings",
       icon: <SettingOutlined />,
