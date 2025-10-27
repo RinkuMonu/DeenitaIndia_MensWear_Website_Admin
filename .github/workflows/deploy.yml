@@ -33,9 +33,9 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
-          port: 22527
+          port: 22
           source: "dist.tar.gz"
-          target: "/home/adminja/"
+          target: "/home/adminjo/"
 
       - name: Unzip files on Server via SSH
         uses: appleboy/ssh-action@master
@@ -43,9 +43,9 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
-          port: 22527
+          port: 22
           script: |
-            rm -rf /home/adminja/public_html/*
-            mkdir -p /home/adminja/public_html
-            tar -xzvf /home/adminja/dist.tar.gz -C /home/adminja/public_html
-            rm /home/adminja/dist.tar.gz
+            rm -rf /home/adminjo/public_html/*
+            mkdir -p /home/adminjo/public_html
+            tar -xzvf /home/adminjo/dist.tar.gz -C /home/adminjo/public_html
+            rm /home/adminjo/dist.tar.gz
