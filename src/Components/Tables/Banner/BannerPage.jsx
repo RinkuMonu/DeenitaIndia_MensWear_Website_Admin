@@ -316,7 +316,7 @@ const BannersPage = () => {
                       {item.images.map((img, idx) => (
                         <img
                           key={idx}
-                          src={`https://api.jajamblockprints.com${img}`}
+                          src={`http://localhost:5007${img}`}
                           alt=""
                           style={{
                             width: 40,
