@@ -35,7 +35,7 @@ const ProductDetail = ({ open, onClose, data }) => {
               {data?.images?.map((item, index) => (
                 <img
                   key={index}
-                  src={`https://api.jajamblockprints.com${item}`}
+                  src={`http://localhost:5007${item}`}
                   alt={`Image ${index + 1}`}
                   style={{
                     width: "100px",

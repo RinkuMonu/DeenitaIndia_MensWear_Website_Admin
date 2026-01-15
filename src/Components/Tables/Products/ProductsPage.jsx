@@ -549,7 +549,7 @@ const ProductsPage = () => {
                               boxShadow: "1px 1px 10px",
                               borderRadius: "50%",
                             }}
-                            src={`https://api.jajamblockprints.com${item}`}
+                            src={`http://localhost:5007${item}`}
                             alt=""
                           />
                         )) || "NA"}
