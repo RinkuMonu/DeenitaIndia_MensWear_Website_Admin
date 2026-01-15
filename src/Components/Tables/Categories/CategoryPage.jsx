@@ -91,7 +91,7 @@ const CategoryPage = () => {
                   <TableCell>
                     {item.image ? (
                       <img
-                        src={`https://api.jajamblockprints.com${item.image}`}
+                        src={`http://localhost:5007${item.image}`}
                         alt={item.name || "category-image"}
                         style={{
                           width: 60,

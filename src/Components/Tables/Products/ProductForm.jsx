@@ -73,7 +73,8 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
       setMaterial(initialData?.material || "");
       setPreviewImages(
         initialData?.images?.map(
-          (img) => `https://api.jajamblockprints.com${img}`
+          // (img) => `https://api.jajamblockprints.com${img}`
+          (img) => `http://localhost:5007${img}`
         ) || []
       );
       setInStock(initialData?.inStock || 0);
@@ -212,7 +213,8 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
     const fetchCategories = async () => {
       try {
         const res = await fetch(
-          `https://api.jajamblockprints.com/api/website/${referenceWebsite}`
+          // `https://api.jajamblockprints.com/api/website/${referenceWebsite}`
+          `http://localhost:5007/api/website/${referenceWebsite}`
         );
         const data = await res.json();
 
