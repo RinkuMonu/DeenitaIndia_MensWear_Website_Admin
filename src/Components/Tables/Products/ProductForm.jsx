@@ -209,7 +209,7 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
   const [groupedCategories, setGroupedCategories] = useState({});
 
   useEffect(() => {
-    const referenceWebsite = "686f69980a9e01743e29bd4c";
+    const referenceWebsite = "6968869bd31f93ad3cd05004";
     const fetchCategories = async () => {
       try {
         const res = await fetch(
@@ -522,8 +522,10 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
 
       <Snackbar
         open={snackbarOpen}
-        autoHideDuration={3000}
-        onClose={handleSnackbarClose}
+        autoHideDuration={4000}
+        onClose={() => setSnackbarOpen(false)}
+        // Is line se position change hogi
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }} 
       >
         <SnackbarContent
           message={snackbarMessage}
