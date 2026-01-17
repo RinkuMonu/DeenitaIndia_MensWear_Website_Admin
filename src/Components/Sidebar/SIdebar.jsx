@@ -532,17 +532,17 @@ function Sidebar() {
       : user?.role === "admin"
       ? [
           ...commonMenuItems,
-          {
-            key: "vendor-requests",
-            icon: <UserAddOutlined />,
-            label: "Vendor Requests",
-            children: [
-              {
-                key: "vendors-list",
-                label: <Link to="/vendors">Vendors list</Link>,
-              },
-            ],
-          },
+          // {
+          //   key: "vendor-requests",
+          //   icon: <UserAddOutlined />,
+          //   label: "Vendor Requests",
+          //   children: [
+          //     {
+          //       key: "vendors-list",
+          //       label: <Link to="/vendors">Vendors list</Link>,
+          //     },
+          //   ],
+          // },
         ]
       : [];
 
