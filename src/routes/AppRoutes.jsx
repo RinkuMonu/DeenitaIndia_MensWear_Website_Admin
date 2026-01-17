@@ -3,7 +3,7 @@
 import { Routes, Route } from "react-router-dom";
 import Dashboard from "../Components/Dashboard/Dashbord";
 import ViewTicket from "../Components/Tables/Support/Viewticket";
-import CreateTicket from "../Components/Pages/Support/Createsupportticket";
+// import CreateTicket from "../Components/Pages/Support/Createsupportticket";
 import ChangePassword from "../Components/Pages/Setting/Changepass";
 import Profile from "../Components/Pages/Setting/Profile";
 import EditProfile from "../Components/Pages/Setting/EditProfile";

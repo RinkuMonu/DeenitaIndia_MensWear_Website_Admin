@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PropTypes from 'prop-types';
 import { Dialog, DialogActions, DialogContent, DialogTitle, Button, MenuItem, Select, FormControl, InputLabel } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
@@ -51,5 +52,9 @@ const PolicyDialog = ({ open, onClose ,selectedWeb}) => {
         </Dialog>
     );
 };
-
+PolicyDialog.propTypes = {
+    open: PropTypes.bool.isRequired,        // boolean (true/false)
+    onClose: PropTypes.func.isRequired,     // function
+    selectedWeb: PropTypes.string,          // assume kar rahe hain ki yeh website ID ya name string hai
+};
 export default PolicyDialog;

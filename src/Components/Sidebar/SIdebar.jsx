@@ -532,17 +532,17 @@ function Sidebar() {
       : user?.role === "admin"
       ? [
           ...commonMenuItems,
-          {
-            key: "vendor-requests",
-            icon: <UserAddOutlined />,
-            label: "Vendor Requests",
-            children: [
-              {
-                key: "vendors-list",
-                label: <Link to="/vendors">Vendors list</Link>,
-              },
-            ],
-          },
+          // {
+          //   key: "vendor-requests",
+          //   icon: <UserAddOutlined />,
+          //   label: "Vendor Requests",
+          //   children: [
+          //     {
+          //       key: "vendors-list",
+          //       label: <Link to="/vendors">Vendors list</Link>,
+          //     },
+          //   ],
+          // },
         ]
       : [];
 
@@ -573,7 +573,7 @@ function Sidebar() {
           <img
             src={logoURL}
             alt="logo"
-            style={{ width: collapsed ? "60px" : "150px", marginTop: "15%" }}
+            style={{ width: collapsed ? "60px" : "80px", marginTop: "15%" }}
           />
         </div>
 

@@ -61,7 +61,6 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
 
   useEffect(() => {
     if (initialData) {
-      console.log("Populating form with initial data:", initialData);
       setProductName(initialData?.productName || "");
       setDescription(initialData.description || "");
       setPrice(initialData?.price || 0);
@@ -138,7 +137,6 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
 
   const handleSubmit = async () => {
     // Debug 1: Check initial states
-    console.log("Submit started. Mode:", addCategory ? "Category" : "Product");
 
     const cleanedSizes = Array.isArray(sizes)
       ? sizes.filter((s) => s.sizes.trim() !== "" && s.price > 0)
@@ -174,7 +172,6 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
 
     const formData = new FormData();
     // Debug 3: Log data being appended
-    console.log("Appending data to FormData...");
 
     if (addCategory) {
       formData.append("name", productName);
@@ -199,32 +196,26 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
       formData.append("isNewArrival", isNewArrival);
       imageFiles.forEach((file, index) => {
         formData.append("images", file);
-        console.log(`Image ${index} appended:`, file.name);
       });
     }
 
     try {
       let response;
       if (initialData) {
-        console.log("Attempting PUT request to products...");
         response = await apiPut(`api/product/products/${initialData._id}`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
       } else if (addCategory) {
-        console.log("Attempting POST request to categories...");
         response = await apiPost("api/categories", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
       } else {
-        console.log("Attempting POST request to products...");
         response = await apiPost("api/product/products", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
       }
 
       // Debug 4: Response status check
-      console.log("Server Response Status:", response.status);
-      console.log("Server Data:", response.data);
 
       if (response.status === 200 || response.status === 201) {
         setSnackbarMessage(addCategory ? "Category created successfully" : "Product saved successfully");
@@ -281,7 +272,6 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
             grouped[sub].push(item);
           });
         }
-        console.log(grouped);
 
         setGroupedCategories(grouped);
       } catch (error) {

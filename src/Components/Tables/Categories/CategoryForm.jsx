@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState,useCallback } from "react";
+import PropTypes from 'prop-types';
 import {
   Dialog,
   DialogActions,
@@ -127,21 +128,23 @@ const CategoryForm = ({ dataHandler, initialData, categories }) => {
 
   const [groupedCategories, setGroupedCategories] = useState([]);
 
+ const fetchCategories = useCallback(async () => {
+    try {
+      const res = await fetch(
+        `https://api.deenitaindia.com/api/categories/getMainCategory`
+      );
+      const data = await res.json();
+      setGroupedCategories(data);
+    } catch (error) {
+      console.error("Failed to fetch categories:", error);
+    }
+  }, []); // Empty dependency kyunki ye kisi state par depend nahi hai
+
   useEffect(() => {
-    if (!user?.referenceWebsite) return;
-    const fetchCategories = async () => {
-      try {
-        const res = await fetch(
-          `https://api.deenitaindia.com/api/categories/getMainCategory`
-        );
-        const data = await res.json();
-        setGroupedCategories(data);
-      } catch (error) {
-        console.error("Failed to fetch categories:", error);
-      }
-    };
-    fetchCategories();
-  }, [user?.referenceWebsite]);
+    if (user?.referenceWebsite) {
+      fetchCategories();
+    }
+  }, [user?.referenceWebsite, fetchCategories]);
 
   return (
     <div>
@@ -292,5 +295,15 @@ const CategoryForm = ({ dataHandler, initialData, categories }) => {
     </div>
   );
 };
-
+CategoryForm.propTypes = {
+  dataHandler: PropTypes.func.isRequired,
+  initialData: PropTypes.shape({
+    _id: PropTypes.string,
+    name: PropTypes.string,
+    description: PropTypes.string,
+    subcategory: PropTypes.string,
+    image: PropTypes.string,
+  }),
+  categories: PropTypes.array,
+};
 export default CategoryForm;

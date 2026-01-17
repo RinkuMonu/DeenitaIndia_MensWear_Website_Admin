@@ -1,4 +1,5 @@
-import React from 'react';
+// import React from 'react';
+import PropTypes from 'prop-types';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Grid } from '@mui/material';
 
 const ViewDetail = ({ open, onClose, websiteData }) => {
@@ -76,5 +77,15 @@ const ViewDetail = ({ open, onClose, websiteData }) => {
         </Dialog>
     );
 };
-
+ViewDetail.propTypes = {
+    open: PropTypes.bool.isRequired,        // Dialog khula hai ya nahi (Boolean)
+    onClose: PropTypes.func.isRequired,     // Dialog band karne ka function
+    websiteData: PropTypes.shape({          // Object ka structure define kiya
+        _id: PropTypes.string,
+        websiteName: PropTypes.string,
+        websiteDescription: PropTypes.string,
+        websiteURL: PropTypes.string,
+        activeStatus: PropTypes.bool,
+    }),
+};
 export default ViewDetail;
