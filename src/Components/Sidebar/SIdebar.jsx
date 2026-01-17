@@ -573,7 +573,7 @@ function Sidebar() {
           <img
             src={logoURL}
             alt="logo"
-            style={{ width: collapsed ? "60px" : "150px", marginTop: "15%" }}
+            style={{ width: collapsed ? "60px" : "80px", marginTop: "15%" }}
           />
         </div>
 

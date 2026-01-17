@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect,useCallback } from 'react';
 import {
   Paper,
   Typography,
@@ -8,25 +8,27 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
+  // TextField,
   Grid,
   Button,
-  Pagination,
+  // Pagination,
   useMediaQuery,
   IconButton,
-  Snackbar
+  // Snackbar
 } from '@mui/material';
 
 import { apiDelete, apiGet } from '../../../api/apiMethods';
 import NewWebsite from './NewWebsite';
-import { DeleteForeverOutlined, EditAttributesOutlined, EditCalendarOutlined, EditNoteOutlined, PolicyOutlined } from '@mui/icons-material';
+// import { DeleteForeverOutlined, EditAttributesOutlined, EditCalendarOutlined, EditNoteOutlined, PolicyOutlined } from '@mui/icons-material';
+import { DeleteForeverOutlined, PolicyOutlined } from '@mui/icons-material';
+
 import DeleteDialog from './DeleteDialog';
 import ViewDetail from './ViewDetail';
 import PolicyDialog from './PolicyDialog';
 
 const Websiteslist = () => {
   const [data, setData] = useState([]); // Initialize as an array
-  const [filteredData, setFilteredData] = useState([]); // Initialize as an array
+  // const [filteredData, setFilteredData] = useState([]); // Initialize as an array
   const [searchInput, setSearchInput] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20; // Define items per page
@@ -43,18 +45,17 @@ const Websiteslist = () => {
   const [viewAll, setViewAll] = useState(true);
   const isSmallScreen = useMediaQuery('(max-width:800px)');
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => { // 2. useCallback mein wrap karein
     try {
       const response = await apiGet(API_ENDPOINT, {
         params: {
           page: currentPage,
           limit: itemsPerPage,
-          search: searchInput, // Ensure search input is passed in the API request
+          search: searchInput,
         }
       });
       if (Array.isArray(response.data.websites)) {
         setData(response.data.websites || []);
-        setFilteredData(response.data.websites);
       } else {
         console.error('Data is not an array:', response.data);
       }
@@ -62,7 +63,7 @@ const Websiteslist = () => {
       setData([])
       console.error(error.message);
     }
-  };
+}, [currentPage, itemsPerPage, searchInput,API_ENDPOINT]);
 
   useEffect(() => {
     fetchCategories();
@@ -81,7 +82,7 @@ const Websiteslist = () => {
 
   useEffect(() => {
     fetchData();
-  }, [currentPage, searchInput]); // Trigger effect when page or search changes
+  }, [fetchData]); // Trigger effect when page or search changes
 
   const deleteHandler = async (id) => {
     let API_URL = `api/website/${id}`;
@@ -105,13 +106,13 @@ const Websiteslist = () => {
   };
 
   const handleFilter = () => {
-    let filtered = data.filter((item) => {
-      const matchesName = item.websiteName?.toLowerCase().includes(searchInput.toLowerCase());
-      const matchesDescription = item.websiteDescription?.toLowerCase().includes(searchInput.toLowerCase());
-      return matchesName || matchesDescription;
-    });
+    // let filtered = data.filter((item) => {
+    //   const matchesName = item.websiteName?.toLowerCase().includes(searchInput.toLowerCase());
+    //   const matchesDescription = item.websiteDescription?.toLowerCase().includes(searchInput.toLowerCase());
+    //   return matchesName || matchesDescription;
+    // });
 
-    setFilteredData(filtered);
+    // setFilteredData(filtered);
     setCurrentPage(1); // Reset to the first page when filtering
   };
 
@@ -121,28 +122,28 @@ const Websiteslist = () => {
 
   const handleReset = () => {
     setSearchInput('');
-    setFilteredData(data);
+    // setFilteredData(data);
     setCurrentPage(1);
     setViewAll(false);
   };
 
-  const handlePageChange = (event, value) => {
-    setCurrentPage(value);
-  };
+  // const handlePageChange = (event, value) => {
+  //   setCurrentPage(value);
+  // };
 
   const toggleViewAll = () => {
     setViewAll((prev) => !prev);
     setCurrentPage(1);
   };
 
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = viewAll
-    ? filteredData
-    : Array.isArray(filteredData)
-      ? filteredData.slice(indexOfFirstItem, indexOfLastItem)
-      : [];
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  // const indexOfLastItem = currentPage * itemsPerPage;
+  // const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  // const currentItems = viewAll
+  //   ? filteredData
+  //   : Array.isArray(filteredData)
+  //     ? filteredData.slice(indexOfFirstItem, indexOfLastItem)
+  //     : [];
+  // const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
   return (
     <>
