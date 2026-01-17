@@ -41,7 +41,7 @@ const CategoryForm = ({ dataHandler, initialData, categories }) => {
       setParentCategory(initialData.subcategory || "");
       
       if (initialData.image) {
-        const imageUrl = `http://localhost:5007/${initialData.image}`;
+        const imageUrl = `https://api.deenitaindia.com/${initialData.image}`;
         if (categoryPreview.length === 0) {
           setCategoryPreview([imageUrl]);
           setHasExistingImage(true);
@@ -120,7 +120,7 @@ const CategoryForm = ({ dataHandler, initialData, categories }) => {
     setCategoryPreview((prev) => prev.filter((_, i) => i !== index));
     
     // If we're removing the existing image (not a newly uploaded one)
-    if (initialData?.image && categoryPreview[index] === `http://localhost:5007/${initialData.image}`) {
+    if (initialData?.image && categoryPreview[index] === `https://api.deenitaindia.com/${initialData.image}`) {
       setHasExistingImage(false);
     }
   };
@@ -132,7 +132,7 @@ const CategoryForm = ({ dataHandler, initialData, categories }) => {
     const fetchCategories = async () => {
       try {
         const res = await fetch(
-          `http://localhost:5007/api/categories/getMainCategory`
+          `https://api.deenitaindia.com/api/categories/getMainCategory`
         );
         const data = await res.json();
         setGroupedCategories(data);

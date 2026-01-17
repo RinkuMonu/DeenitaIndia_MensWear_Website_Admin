@@ -549,7 +549,7 @@ const ProductsPage = () => {
                               boxShadow: "1px 1px 10px",
                               borderRadius: "50%",
                             }}
-                            src={`http://localhost:5007${item}`}
+                            src={`https://api.deenitaindia.com${item}`}
                             alt=""
                           />
                         )) || "NA"}

@@ -35,7 +35,7 @@ const ProductDetail = ({ open, onClose, data }) => {
               {data?.images?.map((item, index) => (
                 <img
                   key={index}
-                  src={`http://localhost:5007${item}`}
+                  src={`https://api.deenitaindia.com${item}`}
                   alt={`Image ${index + 1}`}
                   style={{
                     width: "100px",

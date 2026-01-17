@@ -316,7 +316,7 @@ const BannersPage = () => {
                       {item.images.map((img, idx) => (
                         <img
                           key={idx}
-                          src={`http://localhost:5007${img}`}
+                          src={`https://api.deenitaindia.com${img}`}
                           alt=""
                           style={{
                             width: 40,
