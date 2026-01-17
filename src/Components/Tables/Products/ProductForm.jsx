@@ -61,6 +61,7 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
 
   useEffect(() => {
     if (initialData) {
+      console.log("Populating form with initial data:", initialData);
       setProductName(initialData?.productName || "");
       setDescription(initialData.description || "");
       setPrice(initialData?.price || 0);
@@ -79,10 +80,10 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
       setPreviewImages(
         initialData?.images?.map(
           // (img) => `https://api.jajamblockprints.com${img}`
-          (img) => `http://localhost:5007${img}`
+          (img) => `https://api.deenitaindia.com${img}`
         ) || []
       );
-      setInStock(initialData?.inStock || 0);
+      setInStock(initialData?.stock || 0);
       setIsPopular(!!initialData?.isPopular);
       setIsTrending(!!initialData?.isTrending);
       setIsFeatured(!!initialData?.isFeatured);
@@ -136,20 +137,35 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
   };
 
   const handleSubmit = async () => {
+    // Debug 1: Check initial states
+    console.log("Submit started. Mode:", addCategory ? "Category" : "Product");
+
     const cleanedSizes = Array.isArray(sizes)
       ? sizes.filter((s) => s.sizes.trim() !== "" && s.price > 0)
       : [];
 
-    if (
-      (!addCategory &&
-        (!productName ||
-          !description ||
-          (!initialData && imageFiles.length === 0) ||
-          // !price ||
-          !referenceWebsite ||
-          !category)) ||
-      (addCategory && (!productName || !categoryImage))
-    ) {
+    // Validation logic with detailed console logging
+    const isCategoryInvalid = addCategory && (!productName || !categoryImage);
+    const isProductInvalid = !addCategory && (
+        !productName || 
+        !description || 
+        (!initialData && imageFiles.length === 0) || 
+        !referenceWebsite || 
+        !category
+    );
+
+    if (isCategoryInvalid || isProductInvalid) {
+      // Debug 2: Validation failed details
+      console.warn("Validation Failed. Current State:", {
+        productName,
+        category,
+        description,
+        referenceWebsite,
+        imageCount: imageFiles.length,
+        categoryImage: !!categoryImage,
+        cleanedSizes
+      });
+      
       setSnackbarMessage("Please fill all required fields");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
@@ -157,22 +173,20 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
     }
 
     const formData = new FormData();
+    // Debug 3: Log data being appended
+    console.log("Appending data to FormData...");
 
     if (addCategory) {
       formData.append("name", productName);
       formData.append("subcategory", subcategory);
       if (description) formData.append("description", description);
-      if (referenceWebsite)
-        formData.append("referenceWebsite", referenceWebsite);
+      if (referenceWebsite) formData.append("referenceWebsite", referenceWebsite);
       formData.append("images", categoryImage);
     } else {
       formData.append("productName", productName);
       formData.append("description", description);
       formData.append("price", price);
-      formData.append(
-        "actualPrice",
-        ((price * (100 - discount)) / 100).toFixed(2)
-      );
+      formData.append("actualPrice", ((price * (100 - discount)) / 100).toFixed(2));
       formData.append("discount", discount);
       formData.append("size", JSON.stringify(cleanedSizes));
       formData.append("referenceWebsite", referenceWebsite);
@@ -183,43 +197,65 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
       formData.append("isTrending", isTrending);
       formData.append("isFeatured", isFeatured);
       formData.append("isNewArrival", isNewArrival);
-      imageFiles.forEach((file) => {
+      imageFiles.forEach((file, index) => {
         formData.append("images", file);
+        console.log(`Image ${index} appended:`, file.name);
       });
     }
 
     try {
-      const response = initialData
-        ? await apiPut(`api/product/products/${initialData._id}`, formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          })
-        : addCategory
-        ? await apiPost("api/categories", formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          })
-        : await apiPost("api/product/products", formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
+      let response;
+      if (initialData) {
+        console.log("Attempting PUT request to products...");
+        response = await apiPut(`api/product/products/${initialData._id}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      } else if (addCategory) {
+        console.log("Attempting POST request to categories...");
+        response = await apiPost("api/categories", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      } else {
+        console.log("Attempting POST request to products...");
+        response = await apiPost("api/product/products", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      }
 
-      if (response.status === 200) {
-        setSnackbarMessage(
-          addCategory
-            ? "Category created successfully"
-            : "Product saved successfully"
-        );
+      // Debug 4: Response status check
+      console.log("Server Response Status:", response.status);
+      console.log("Server Data:", response.data);
+
+      if (response.status === 200 || response.status === 201) {
+        setSnackbarMessage(addCategory ? "Category created successfully" : "Product saved successfully");
         setSnackbarSeverity("success");
         setOpen(false);
         dataHandler();
+      } else {
+        // Agar response status 200 nahi hai
+        console.error("Non-200 Response Received:", response);
       }
     } catch (error) {
-      console.error(error);
-      setSnackbarMessage("Failed to save");
+      // Debug 5: Comprehensive Error Logging
+      console.error("Critical Submission Error:");
+      if (error.response) {
+        // Server ne respond kiya lekin error code ke saath
+        console.error("Backend Error Data:", error.response.data);
+        console.error("Backend Status Code:", error.response.status);
+      } else if (error.request) {
+        // Request bhej di gayi par response nahi mila (Network issue)
+        console.error("No response received from server. Check Network/CORS.");
+      } else {
+        // Request setup karte waqt error aayi
+        console.error("Request Setup Error:", error.message);
+      }
+      
+      setSnackbarMessage(error.response?.data?.message || "Failed to save");
       setSnackbarSeverity("error");
     }
 
     setSnackbarOpen(true);
   };
-
   const handleClickOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   const handleSnackbarClose = () => setSnackbarOpen(false);
@@ -232,7 +268,7 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
       try {
         const res = await fetch(
           // `https://api.jajamblockprints.com/api/website/${referenceWebsite}`
-          `http://localhost:5007/api/website/${referenceWebsite}`
+          `https://api.deenitaindia.com/api/website/${referenceWebsite}`
         );
         const data = await res.json();
 
@@ -361,6 +397,9 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
         </Grid>
 
         <Grid item xs={12}>
+          <p className="text-red-500 text-sm font-medium mt-1">
+            * You can select multiple images (Hold Ctrl/Cmd to select)
+          </p>        
           <input
             type="file"
             accept="image/*"
@@ -391,7 +430,7 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
             fullWidth
             label="Price"
             variant="outlined"
-            type="number"
+            type="text"
             inputProps={{ min: 0 }}
             value={price}
             onChange={(e) => {
@@ -441,7 +480,7 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
                   fullWidth
                   label="Price"
                   variant="outlined"
-                  type="number"
+                  type="text"
                   value={item.price}
                   onChange={(e) => {
                     const updated = [...sizes];
@@ -472,7 +511,7 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
             fullWidth
             label="Discount (%)"
             variant="outlined"
-            type="number"
+            type="text"
             inputProps={{ min: 0 }}
             value={discount}
             onChange={(e) => {
@@ -503,7 +542,7 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
             fullWidth
             label="Stock Quantity"
             variant="outlined"
-            type="number"
+            type="text"
             inputProps={{ min: 0 }}
             value={inStock}
             onChange={(e) => setInStock(Number(e.target.value))}
@@ -546,7 +585,7 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
         </Grid>
 
         {/* --- NEW FIELD: TAGS --- */}
-        <Grid item xs={12}>
+        {/* <Grid item xs={12}>
           <TextField
             fullWidth
             label="Search Tags"
@@ -556,7 +595,7 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
             onChange={(e) => setTags(e.target.value)}
             helperText="Separate tags with commas (,)"
           />
-        </Grid>
+        </Grid> */}
       </>
     )}
   </Grid>

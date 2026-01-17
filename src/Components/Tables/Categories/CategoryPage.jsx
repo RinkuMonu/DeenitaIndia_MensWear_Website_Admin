@@ -91,7 +91,7 @@ const CategoryPage = () => {
                   <TableCell>
                     {item.image ? (
                       <img
-                        src={`http://localhost:5007${item.image}`}
+                        src={`https://api.deenitaindia.com${item.image}`}
                         alt={item.name || "category-image"}
                         style={{
                           width: 60,
