@@ -11,6 +11,7 @@ import useAxiosInterceptors from "../axiosConfig";
 import Websiteslist from "../Components/Tables/Website/Websiteslist";
 import CategoryPage from "../Components/Tables/Categories/CategoryPage";
 import ProductsPage from "../Components/Tables/Products/ProductsPage";
+import BrandPage from "../Components/Tables/Brands/BrandsPage";
 import UsersPage from "../Components/Tables/Users/UsersPage";
 import OrdersPage from "../Components/Tables/Orders/OrdersPage";
 import VendorsPage from "../Components/Tables/Vendors/VendorsPage";
@@ -31,6 +32,8 @@ const AppRoutes = () => {
       <Route path="/categories" element={<CategoryPage />} />
       <Route path="/ParentCategories" element={<ParentCategoryPage />} />
       <Route path="/products" element={<ProductsPage />} />
+      <Route path="/brands" element={<BrandPage />} />
+
       <Route path="/users" element={<UsersPage />} />
       <Route path="/orders" element={<OrdersPage />} />
       <Route path="/vendors" element={<VendorsPage />} />
