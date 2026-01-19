@@ -16,7 +16,7 @@ import {
   IconButton,
   Box,Typography,
 } from "@mui/material";
-import { apiPost, apiPut } from "../../../api/apiMethods";
+import { apiGet,apiPost, apiPut } from "../../../api/apiMethods";
 import { EditNoteOutlined } from "@mui/icons-material";
 import { useUser } from "../../../Context/UserContext";
 import AddIcon from "@mui/icons-material/Add";
@@ -38,7 +38,7 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
   const [productName, setProductName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState(0);
-  const [sizes, setSizes] = useState([{ sizes: "", price: 0 }]);
+  const [sizes, setSizes] = useState([{ sizes: "", price: 0, colors: [""] }]);
   const [discount, setDiscount] = useState(0);
   const [referenceWebsite, setReferenceWebsite] = useState("");
   const [category, setCategory] = useState("");
@@ -58,7 +58,21 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [subcategory, setSubCategory] = useState("");
   const { user, categories } = useUser();
-
+  const [brands, setBrands] = useState([]);
+  const [colors, setColors] = useState([""]);
+  console.log("brands:", brands);
+  const [brand, setBrand] = useState("");
+  useEffect(() => {
+  const fetchBrands = async () => {
+    try {
+      const response = await apiGet("api/brands"); 
+      setBrands(response.data.brands || []);
+    } catch (error) {
+      console.error("Failed to fetch brands:", error);
+    }
+  };
+  fetchBrands();
+}, []);
   useEffect(() => {
     if (initialData) {
       setProductName(initialData?.productName || "");
@@ -69,8 +83,9 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
           ? initialData.size.map((item) => ({
               sizes: item.sizes || "",
               price: item.price || 0,
+              colors: Array.isArray(item.colors) && item.colors.length > 0 ? item.colors : [""]
             }))
-          : [{ sizes: "", price: 0 }]
+          : [{ sizes: "", price: 0, colors: [""] }]
       );
       setDiscount(initialData?.discount || 0);
       setReferenceWebsite(initialData?.referenceWebsite || "");
@@ -78,7 +93,6 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
       setMaterial(initialData?.material || "");
       setPreviewImages(
         initialData?.images?.map(
-          // (img) => `https://api.jajamblockprints.com${img}`
           (img) => `https://api.deenitaindia.com${img}`
         ) || []
       );
@@ -87,7 +101,8 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
       setIsTrending(!!initialData?.isTrending);
       setIsFeatured(!!initialData?.isFeatured);
       setIsNewArrival(initialData?.isNewArrival ?? true);
-
+      setBrand(initialData?.brand?._id || initialData?.brand || "");
+      setColors(initialData?.colors || [""]);
       if (Array.isArray(initialData?.tags)) {
         setTags(initialData.tags.join(", "));
       } else {
@@ -104,21 +119,22 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
     }
   }, [user, initialData]);
 
-  const resetForm = () => {
-    setProductName("");
-    setDescription("");
-    setPrice(0);
-    setSizes([{ sizes: "", price: 0 }]);
-    setDiscount(0);
-    setReferenceWebsite("");
-    setCategory("");
-    setSubCategory("");
-    setMaterial("");
-    setImageFiles([]);
-    setPreviewImages([]);
-    setCategoryImage(null);
-    setCategoryPreview("");
-  };
+ const resetForm = () => {
+  setProductName("");
+  setDescription("");
+  setPrice(0);
+  setSizes([{ sizes: "", price: 0, colors: [""] }]); // Yahan colors add kiya
+  setDiscount(0);
+  setReferenceWebsite("");
+  setCategory("");
+  setSubCategory("");
+  setMaterial("");
+  setImageFiles([]);
+  setPreviewImages([]);
+  setCategoryImage(null);
+  setCategoryPreview("");
+  setColors([""]); // Global colors reset
+};
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
@@ -136,42 +152,39 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
   };
 
   const handleSubmit = async () => {
-    // Debug 1: Check initial states
-
+    // 1. Data Cleaning: Empty sizes aur unke andar ke empty colors ko remove karna
     const cleanedSizes = Array.isArray(sizes)
-      ? sizes.filter((s) => s.sizes.trim() !== "" && s.price > 0)
+      ? sizes
+          .filter((s) => s.sizes.trim() !== "" && s.price > 0) // Valid size & price check
+          .map((s) => ({
+            sizes: s.sizes,
+            price: s.price,
+            // Har size ke andar wale colors ko filter karein
+            colors: Array.isArray(s.colors) ? s.colors.filter((c) => c.trim() !== "") : [],
+          }))
       : [];
 
-    // Validation logic with detailed console logging
+    // 2. Validation Logic
     const isCategoryInvalid = addCategory && (!productName || !categoryImage);
     const isProductInvalid = !addCategory && (
-        !productName || 
-        !description || 
-        (!initialData && imageFiles.length === 0) || 
-        !referenceWebsite || 
-        !category
+      !productName || 
+      !description || 
+      (!initialData && imageFiles.length === 0) || 
+      !referenceWebsite || 
+      !category ||
+      cleanedSizes.length === 0 // Kam se kam ek valid size honi chahiye
     );
 
     if (isCategoryInvalid || isProductInvalid) {
-      // Debug 2: Validation failed details
-      console.warn("Validation Failed. Current State:", {
-        productName,
-        category,
-        description,
-        referenceWebsite,
-        imageCount: imageFiles.length,
-        categoryImage: !!categoryImage,
-        cleanedSizes
-      });
-      
-      setSnackbarMessage("Please fill all required fields");
+      setSnackbarMessage(cleanedSizes.length === 0 && !addCategory 
+        ? "Please add at least one valid size and price" 
+        : "Please fill all required fields");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
       return;
     }
 
     const formData = new FormData();
-    // Debug 3: Log data being appended
 
     if (addCategory) {
       formData.append("name", productName);
@@ -181,11 +194,20 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
       formData.append("images", categoryImage);
     } else {
       formData.append("productName", productName);
+      formData.append("brand", brand);
+      
+      // Global colors (agar aap use kar rahe hain)
+      const cleanedGlobalColors = colors.filter(c => c.trim() !== "");
+      formData.append("color", JSON.stringify(cleanedGlobalColors)); // Note: key matching with schema
+      
       formData.append("description", description);
       formData.append("price", price);
       formData.append("actualPrice", ((price * (100 - discount)) / 100).toFixed(2));
       formData.append("discount", discount);
+      
+      // IMPORTANT: Nested Size and Color Data
       formData.append("size", JSON.stringify(cleanedSizes));
+      
       formData.append("referenceWebsite", referenceWebsite);
       formData.append("category", category);
       formData.append("material", material);
@@ -194,54 +216,35 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
       formData.append("isTrending", isTrending);
       formData.append("isFeatured", isFeatured);
       formData.append("isNewArrival", isNewArrival);
-      imageFiles.forEach((file, index) => {
+
+      imageFiles.forEach((file) => {
         formData.append("images", file);
       });
     }
 
+    // 3. API Call
     try {
       let response;
-      if (initialData) {
-        response = await apiPut(`api/product/products/${initialData._id}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      } else if (addCategory) {
-        response = await apiPost("api/categories", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      } else {
-        response = await apiPost("api/product/products", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      }
+      const config = { headers: { "Content-Type": "multipart/form-data" } };
 
-      // Debug 4: Response status check
+      if (initialData) {
+        response = await apiPut(`api/product/products/${initialData._id}`, formData, config);
+      } else if (addCategory) {
+        response = await apiPost("api/categories", formData, config);
+      } else {
+        response = await apiPost("api/product/products", formData, config);
+      }
 
       if (response.status === 200 || response.status === 201) {
         setSnackbarMessage(addCategory ? "Category created successfully" : "Product saved successfully");
         setSnackbarSeverity("success");
         setOpen(false);
         dataHandler();
-      } else {
-        // Agar response status 200 nahi hai
-        console.error("Non-200 Response Received:", response);
+        if (!initialData) resetForm(); // Naya product banne ke baad form reset karein
       }
     } catch (error) {
-      // Debug 5: Comprehensive Error Logging
-      console.error("Critical Submission Error:");
-      if (error.response) {
-        // Server ne respond kiya lekin error code ke saath
-        console.error("Backend Error Data:", error.response.data);
-        console.error("Backend Status Code:", error.response.status);
-      } else if (error.request) {
-        // Request bhej di gayi par response nahi mila (Network issue)
-        console.error("No response received from server. Check Network/CORS.");
-      } else {
-        // Request setup karte waqt error aayi
-        console.error("Request Setup Error:", error.message);
-      }
-      
-      setSnackbarMessage(error.response?.data?.message || "Failed to save");
+      console.error("Submission Error:", error.response?.data || error.message);
+      setSnackbarMessage(error.response?.data?.message || "Failed to save product");
       setSnackbarSeverity("error");
     }
 
@@ -258,7 +261,6 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
     const fetchCategories = async () => {
       try {
         const res = await fetch(
-          // `https://api.jajamblockprints.com/api/website/${referenceWebsite}`
           `https://api.deenitaindia.com/api/website/${referenceWebsite}`
         );
         const data = await res.json();
@@ -377,6 +379,35 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
     {!addCategory && (
       <>
         <Grid item xs={12}>
+          <FormControl fullWidth>
+            <InputLabel id="brand-select-label">Brand</InputLabel>
+            <Select
+              labelId="brand-select-label"
+              value={brand}
+              label="Brand"
+              onChange={(e) => setBrand(e.target.value)}
+            >
+              <MenuItem value="">
+                <em>None</em>
+              </MenuItem>
+              {brands.map((b) => (
+                <MenuItem key={b._id} value={b._id}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {b.logo && (
+                      <img 
+                        src={`https://api.deenitaindia.com${b.logo}`} 
+                        alt={b.name} 
+                        style={{ width: 20, height: 20, borderRadius: '50%' }} 
+                      />
+                    )}
+                    {b.name}
+                  </Box>
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+        <Grid item xs={12}>
           <ReactQuill
             theme="snow"
             value={description}
@@ -438,63 +469,108 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
             onChange={(e) => setMaterial(e.target.value)}
           />
         </Grid>
-
+            
         <Grid item xs={12}>
           <strong>Sizes & Prices</strong>
         </Grid>
 
         {Array.isArray(sizes) &&
           sizes.map((item, index) => (
-            <Grid
-              container
-              spacing={1}
-              key={index}
-              alignItems="center"
-              sx={{ mb: 1, ml: "2px" }}
-            >
-              <Grid item xs={5}>
-                <TextField
-                  fullWidth
-                  label="Size"
-                  variant="outlined"
-                  value={item.sizes}
-                  onChange={(e) => {
-                    const updated = [...sizes];
-                    updated[index].sizes = e.target.value;
-                    setSizes(updated);
-                  }}
-                />
+            <Box key={index} sx={{ border: "1px solid #ddd", p: 2, mb: 2, borderRadius: 2 }}>
+              <Grid container spacing={2} alignItems="center">
+                {/* Size Input */}
+                <Grid item xs={5}>
+                  <TextField
+                    fullWidth label="Size (e.g. XL)"
+                    variant="outlined"
+                    value={item.sizes}
+                    onChange={(e) => {
+                      const updated = [...sizes];
+                      updated[index].sizes = e.target.value;
+                      setSizes(updated);
+                    }}
+                  />
+                </Grid>
+
+                {/* Price Input */}
+                <Grid item xs={5}>
+                  <TextField
+                    fullWidth label="Price"
+                    variant="outlined"
+                    type="number"
+                    value={item.price}
+                    onChange={(e) => {
+                      const updated = [...sizes];
+                      updated[index].price = Number(e.target.value);
+                      setSizes(updated);
+                    }}
+                  />
+                </Grid>
+
+                {/* Add/Remove Size Row */}
+                <Grid item xs={2}>
+                  <IconButton
+                    onClick={() => {
+                      if (index === sizes.length - 1) {
+                        setSizes([...sizes, { sizes: "", price: 0, colors: [""] }]);
+                      } else {
+                        setSizes(sizes.filter((_, i) => i !== index));
+                      }
+                    }}
+                  >
+                    {index === sizes.length - 1 ? <AddIcon /> : <DeleteIcon color="error" />}
+                  </IconButton>
+                </Grid>
+
+                {/* --- Nested Colors Section for this specific Size --- */}
+                <Grid item xs={12}>
+                  <Typography variant="body2" sx={{ fontWeight: "bold", mb: 1 }}>
+                    Available Colors for this size:
+                  </Typography>
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                    {/* (item.colors || [""]) ensures ki loop empty na ho */}
+                    {(item.colors || [""]).map((col, colIdx) => (
+                      <Box key={colIdx} sx={{ display: "flex", alignItems: "center" }}>
+                        <TextField
+                          size="small"
+                          label={`Color ${colIdx + 1}`}
+                          placeholder="e.g. Blue"
+                          value={col}
+                          sx={{ width: "130px" }}
+                          onChange={(e) => {
+                            const updated = [...sizes];
+                            if (!updated[index].colors) updated[index].colors = [""];
+                            updated[index].colors[colIdx] = e.target.value;
+                            setSizes(updated);
+                          }}
+                        />
+                        <IconButton
+                          size="small"
+                          onClick={() => {
+                            const updated = [...sizes];
+                            if (!updated[index].colors) updated[index].colors = [""];
+                            
+                            if (colIdx === updated[index].colors.length - 1) {
+                              updated[index].colors.push(""); 
+                            } else {
+                              updated[index].colors = updated[index].colors.filter((_, i) => i !== colIdx);
+                            }
+                            setSizes(updated);
+                          }}
+                        >
+                          {colIdx === (item.colors?.length || 1) - 1 ? (
+                            <AddIcon fontSize="small" />
+                          ) : (
+                            <DeleteIcon fontSize="small" color="error" />
+                          )}
+                        </IconButton>
+                      </Box>
+                    ))}
+                  </Box>
+                </Grid>
               </Grid>
-              <Grid item xs={5}>
-                <TextField
-                  fullWidth
-                  label="Price"
-                  variant="outlined"
-                  type="text"
-                  value={item.price}
-                  onChange={(e) => {
-                    const updated = [...sizes];
-                    updated[index].price = Number(e.target.value);
-                    setSizes(updated);
-                  }}
-                />
-              </Grid>
-              <Grid item xs={2}>
-                <IconButton
-                  onClick={() => {
-                    if (index === sizes.length - 1) {
-                      setSizes([...sizes, { sizes: "", price: 0 }]);
-                    } else {
-                      const filtered = sizes.filter((_, i) => i !== index);
-                      setSizes(filtered.length ? filtered : [{ sizes: "", price: 0 }]);
-                    }
-                  }}
-                >
-                  {index === sizes.length - 1 ? <AddIcon /> : <DeleteIcon />}
-                </IconButton>
-              </Grid>
-            </Grid>
-          ))}
+            </Box>
+        ))}
 
         <Grid item xs={12}>
           <TextField

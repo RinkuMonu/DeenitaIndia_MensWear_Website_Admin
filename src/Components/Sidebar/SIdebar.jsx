@@ -401,6 +401,7 @@ function Sidebar() {
       label: "Products",
       children: [
         { key: "products-list", label: <Link to="/products">Products</Link> },
+        { key: "brand-list", label: <Link to="/brands">Brands</Link> },
       ],
     },
     {
