@@ -3,8 +3,8 @@ import { HandleAxiosError } from "./axioserror";
 
 
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:5004",
-  // baseURL: "https://api.deenitaindia.com",
+  // baseURL: "http://localhost:5004",
+  baseURL: "https://api.deenitaindia.com",
   // headers: {
   //   "Content-Type": "application/json",
   //    },
