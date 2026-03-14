@@ -176,6 +176,9 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
       cleanedSizes.length === 0 // Kam se kam ek valid size honi chahiye
     );
 console.log("cleanedSizes:", cleanedSizes);
+console.log("isCategoryInvalid:", isCategoryInvalid);
+console.log("isProductInvalid:", isProductInvalid);
+
     if (isCategoryInvalid || isProductInvalid) {
       setSnackbarMessage(cleanedSizes.length === 0 && !addCategory 
         ? "Please add at least one valid size and price" 
