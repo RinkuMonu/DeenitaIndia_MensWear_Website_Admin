@@ -30,7 +30,6 @@ const BannerForm = ({ dataHandler, initialData, websites }) => {
   const [deviceType, setDeviceType] = useState("both");
   const [imageFiles, setImageFiles] = useState([]);
   const [previewImages, setPreviewImages] = useState([]);
-
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
@@ -215,7 +214,7 @@ const BannerForm = ({ dataHandler, initialData, websites }) => {
                 {previewImages.map((img, idx) => (
                   <Grid item key={idx}>
                     <img
-                      src={img}
+                      src={`https://api.deenitaindia.com${img}`}
                       alt={`preview-${idx}`}
                       style={{
                         width: 60,
