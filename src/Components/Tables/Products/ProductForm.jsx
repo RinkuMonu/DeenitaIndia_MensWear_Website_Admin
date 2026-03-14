@@ -240,11 +240,11 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
         setSnackbarSeverity("success");
         setOpen(false);
         dataHandler();
-        if (!initialData) resetForm(); // Naya product banne ke baad form reset karein
+        if (!initialData) resetForm();
       }
     } catch (error) {
-      console.error("Submission Error:", error.response?.data || error.message);
-      setSnackbarMessage(error.response?.data?.message || "Failed to save product");
+      console.error("Submission Error:", error.response?.data || error.error);
+      setSnackbarMessage(error.response?.data?.error || "Failed to save product");
       setSnackbarSeverity("error");
     }
 
@@ -312,7 +312,21 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
             : "New Product"}
         </DialogTitle>
 
-        <DialogContent>
+<DialogContent>
+   <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={4000}
+        onClose={() => setSnackbarOpen(false)}
+        // Is line se position change hogi
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }} 
+      >
+        <SnackbarContent
+          message={snackbarMessage}
+          style={{
+            backgroundColor: snackbarSeverity === "success" ? "green" : "red",
+          }}
+        />
+      </Snackbar>
   <Grid container spacing={2} sx={{ width: "100%" }}>
     <Grid item xs={12}>
       <TextField
@@ -665,6 +679,7 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
       </>
     )}
   </Grid>
+  
 </DialogContent>
 
         <DialogActions>
@@ -677,20 +692,7 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
         </DialogActions>
       </Dialog>
 
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={4000}
-        onClose={() => setSnackbarOpen(false)}
-        // Is line se position change hogi
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }} 
-      >
-        <SnackbarContent
-          message={snackbarMessage}
-          style={{
-            backgroundColor: snackbarSeverity === "success" ? "green" : "red",
-          }}
-        />
-      </Snackbar>
+     
     </div>
   );
 };
