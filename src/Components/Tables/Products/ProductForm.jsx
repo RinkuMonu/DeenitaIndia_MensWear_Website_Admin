@@ -39,6 +39,8 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState(0);
   const [sizes, setSizes] = useState([{ sizes: "", price: 0, colors: [""] }]);
+  console.log("Initial Sizes State:", sizes);
+  console.log("Initial Data Sizes:", initialData);
   const [discount, setDiscount] = useState(0);
   const [referenceWebsite, setReferenceWebsite] = useState("");
   const [category, setCategory] = useState("");
@@ -60,7 +62,6 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
   const { user, categories } = useUser();
   const [brands, setBrands] = useState([]);
   const [colors, setColors] = useState([""]);
-  console.log("brands:", brands);
   const [brand, setBrand] = useState("");
   useEffect(() => {
   const fetchBrands = async () => {
@@ -174,7 +175,7 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
       !category ||
       cleanedSizes.length === 0 // Kam se kam ek valid size honi chahiye
     );
-
+console.log("cleanedSizes:", cleanedSizes);
     if (isCategoryInvalid || isProductInvalid) {
       setSnackbarMessage(cleanedSizes.length === 0 && !addCategory 
         ? "Please add at least one valid size and price" 
