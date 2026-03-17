@@ -275,9 +275,11 @@ const ProductsPage = () => {
           </Grid>
           <Grid item xs={2}>
             <ProductForm
+              addCategory={false}
               categories={categories}
               websites={websites}
               dataHandler={fetchData}
+              name={"name1"}
             />
           </Grid>
           <Grid item xs={2}>
@@ -286,6 +288,7 @@ const ProductsPage = () => {
               categories={categories}
               websites={websites}
               dataHandler={fetchData}
+              name={"name2"}
             />
           </Grid>
         </Grid>
@@ -642,6 +645,7 @@ const ProductsPage = () => {
                         websites={websites}
                         dataHandler={fetchData}
                         initialData={item}
+                        name={"name3"}
                       />
                     </TableCell>
                   </TableRow>

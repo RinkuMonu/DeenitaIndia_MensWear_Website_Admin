@@ -14,9 +14,9 @@ import {
   InputLabel,
   FormControl,
   IconButton,
-  Box,Typography,
+  Box, Typography,
 } from "@mui/material";
-import { apiGet,apiPost, apiPut } from "../../../api/apiMethods";
+import { apiGet, apiPost, apiPut } from "../../../api/apiMethods";
 import { EditNoteOutlined } from "@mui/icons-material";
 import { useUser } from "../../../Context/UserContext";
 import AddIcon from "@mui/icons-material/Add";
@@ -25,6 +25,7 @@ import { makeStyles } from "@mui/styles";
 import "react-quill/dist/quill.snow.css";
 import ReactQuill from "react-quill";
 import { Checkbox, FormControlLabel } from "@mui/material";
+import { set } from "lodash";
 const useStyles = makeStyles({
   selectInput: {
     minWidth: 200,
@@ -32,15 +33,13 @@ const useStyles = makeStyles({
   },
 });
 
-const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
+const ProductForm = ({ dataHandler, initialData, websites, addCategory, name }) => {
   const classes = useStyles();
   const [open, setOpen] = useState(false);
   const [productName, setProductName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState(0);
   const [sizes, setSizes] = useState([{ sizes: "", price: 0, colors: [""] }]);
-  console.log("Initial Sizes State:", sizes);
-  console.log("Initial Data Sizes:", initialData);
   const [discount, setDiscount] = useState(0);
   const [referenceWebsite, setReferenceWebsite] = useState("");
   const [category, setCategory] = useState("");
@@ -63,17 +62,18 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
   const [brands, setBrands] = useState([]);
   const [colors, setColors] = useState([""]);
   const [brand, setBrand] = useState("");
+
   useEffect(() => {
-  const fetchBrands = async () => {
-    try {
-      const response = await apiGet("api/brands"); 
-      setBrands(response.data.brands || []);
-    } catch (error) {
-      console.error("Failed to fetch brands:", error);
-    }
-  };
-  fetchBrands();
-}, []);
+    const fetchBrands = async () => {
+      try {
+        const response = await apiGet("api/brands");
+        setBrands(response.data.brands || []);
+      } catch (error) {
+        console.error("Failed to fetch brands:", error);
+      }
+    };
+    fetchBrands();
+  }, []);
   useEffect(() => {
     if (initialData) {
       setProductName(initialData?.productName || "");
@@ -82,10 +82,10 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
       setSizes(
         Array.isArray(initialData?.size) && initialData.size.length > 0
           ? initialData.size.map((item) => ({
-              sizes: item.sizes || "",
-              price: item.price || 0,
-              colors: Array.isArray(item.colors) && item.colors.length > 0 ? item.colors : [""]
-            }))
+            sizes: item.sizes || "",
+            price: item.price || 0,
+            colors: Array.isArray(item.colors) && item.colors.length > 0 ? item.colors : [""]
+          }))
           : [{ sizes: "", price: 0, colors: [""] }]
       );
       setDiscount(initialData?.discount || 0);
@@ -107,7 +107,7 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
       if (Array.isArray(initialData?.tags)) {
         setTags(initialData.tags.join(", "));
       } else {
-        setTags(""); 
+        setTags("");
       }
     } else {
       resetForm();
@@ -115,27 +115,29 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
   }, [initialData]);
 
   useEffect(() => {
-    if (user && !initialData) {
+    if (user && (!initialData || initialData === undefined)) {
       setReferenceWebsite(user.referenceWebsite || "");
     }
   }, [user, initialData]);
 
- const resetForm = () => {
-  setProductName("");
-  setDescription("");
-  setPrice(0);
-  setSizes([{ sizes: "", price: 0, colors: [""] }]); // Yahan colors add kiya
-  setDiscount(0);
-  setReferenceWebsite("");
-  setCategory("");
-  setSubCategory("");
-  setMaterial("");
-  setImageFiles([]);
-  setPreviewImages([]);
-  setCategoryImage(null);
-  setCategoryPreview("");
-  setColors([""]); // Global colors reset
-};
+  const resetForm = () => {
+    setProductName("");
+    setDescription("");
+    setPrice(0);
+    setSizes([{ sizes: "", price: 0, colors: [""] }]); // Yahan colors add kiya
+    setDiscount(0);
+    setBrand("");
+    setReferenceWebsite(user?.referenceWebsite || "");
+    setCategory("");
+    setSubCategory("");
+    setMaterial("");
+    setImageFiles([]);
+    setPreviewImages([]);
+    setCategoryImage(null);
+    setCategoryPreview("");
+    setColors([""]); // Global colors reset
+    setInStock(0);
+  };
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
@@ -151,37 +153,40 @@ const ProductForm = ({ dataHandler, initialData, websites, addCategory }) => {
       setCategoryPreview(URL.createObjectURL(file));
     }
   };
-
+  
   const handleSubmit = async () => {
-    // 1. Data Cleaning: Empty sizes aur unke andar ke empty colors ko remove karna
     const cleanedSizes = Array.isArray(sizes)
       ? sizes
-          .filter((s) => s.sizes.trim() !== "" && s.price > 0) // Valid size & price check
-          .map((s) => ({
-            sizes: s.sizes,
-            price: s.price,
-            // Har size ke andar wale colors ko filter karein
-            colors: Array.isArray(s.colors) ? s.colors.filter((c) => c.trim() !== "") : [],
-          }))
+        .filter((s) => s.sizes.trim() !== "" && s.price > 0) // Valid size & price check
+        .map((s) => ({
+          sizes: s.sizes,
+          price: s.price,
+          colors: Array.isArray(s.colors) ? s.colors.filter((c) => c.trim() !== "") : [],
+        }))
       : [];
-
+    // console.log("Validation Check:", {
+    //   productName: !!productName,
+    //   description: !!description,
+    //   images: (!initialData && imageFiles.length === 0),
+    //   referenceWebsite: !!referenceWebsite,
+    //   category: !!category,
+    //   sizes: cleanedSizes.length > 0
+    // });
     // 2. Validation Logic
     const isCategoryInvalid = addCategory && (!productName || !categoryImage);
     const isProductInvalid = !addCategory && (
-      !productName || 
-      !description || 
-      (!initialData && imageFiles.length === 0) || 
-      !referenceWebsite || 
+      !productName ||
+      !description ||
+      (!initialData && imageFiles.length === 0) ||
+      !referenceWebsite ||
       !category ||
-      cleanedSizes.length === 0 // Kam se kam ek valid size honi chahiye
+      cleanedSizes.length === 0
     );
-console.log("cleanedSizes:", cleanedSizes);
-console.log("isCategoryInvalid:", isCategoryInvalid);
-console.log("isProductInvalid:", isProductInvalid);
+    
 
     if (isCategoryInvalid || isProductInvalid) {
-      setSnackbarMessage(cleanedSizes.length === 0 && !addCategory 
-        ? "Please add at least one valid size and price" 
+      setSnackbarMessage(cleanedSizes.length === 0 && !addCategory
+        ? "Please add at least one valid size and price"
         : "Please fill all required fields");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
@@ -199,19 +204,19 @@ console.log("isProductInvalid:", isProductInvalid);
     } else {
       formData.append("productName", productName);
       formData.append("brand", brand);
-      
+
       // Global colors (agar aap use kar rahe hain)
       const cleanedGlobalColors = colors.filter(c => c.trim() !== "");
       formData.append("color", JSON.stringify(cleanedGlobalColors)); // Note: key matching with schema
-      
+
       formData.append("description", description);
       formData.append("price", price);
       formData.append("actualPrice", ((price * (100 - discount)) / 100).toFixed(2));
       formData.append("discount", discount);
-      
+
       // IMPORTANT: Nested Size and Color Data
       formData.append("size", JSON.stringify(cleanedSizes));
-      
+
       formData.append("referenceWebsite", referenceWebsite);
       formData.append("category", category);
       formData.append("material", material);
@@ -244,7 +249,7 @@ console.log("isProductInvalid:", isProductInvalid);
         setSnackbarSeverity("success");
         setOpen(false);
         dataHandler();
-        if (!initialData) resetForm();
+        resetForm();
       }
     } catch (error) {
       console.error("Submission Error:", error.response?.data || error.error);
@@ -312,364 +317,364 @@ console.log("isProductInvalid:", isProductInvalid);
           {initialData
             ? "Update Product"
             : addCategory
-            ? "Add Category"
-            : "New Product"}
+              ? "Add Category"
+              : "New Product"}
         </DialogTitle>
 
-<DialogContent>
-   <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={4000}
-        onClose={() => setSnackbarOpen(false)}
-        // Is line se position change hogi
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }} 
-      >
-        <SnackbarContent
-          message={snackbarMessage}
-          style={{
-            backgroundColor: snackbarSeverity === "success" ? "green" : "red",
-          }}
-        />
-      </Snackbar>
-  <Grid container spacing={2} sx={{ width: "100%" }}>
-    <Grid item xs={12}>
-      <TextField
-        fullWidth
-        label={addCategory ? "Category Name" : "Product Name"}
-        variant="outlined"
-        value={productName}
-        onChange={(e) => setProductName(e.target.value)}
-      />
-    </Grid>
-
-    {addCategory && (
-      <>
-        <Grid item xs={12}>
-          <FormControl fullWidth>
-            <InputLabel id="subcategory-label">Add Sub Category</InputLabel>
-            <Select
-              labelId="subcategory-label"
-              value={subcategory}
-              onChange={(e) => setSubCategory(e.target.value)}
-            >
-              {Object.keys(groupedCategories).map((key) => (
-                <MenuItem key={key} value={key}>
-                  {key}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={12}>
-          <TextField
-            fullWidth
-            label="Description (optional)"
-            variant="outlined"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleCategoryImageUpload}
-            style={{ marginTop: 8 }}
-          />
-          {categoryPreview && (
-            <img
-              src={categoryPreview}
-              alt="category-preview"
+        <DialogContent>
+          <Snackbar
+            open={snackbarOpen}
+            autoHideDuration={4000}
+            onClose={() => setSnackbarOpen(false)}
+            // Is line se position change hogi
+            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+          >
+            <SnackbarContent
+              message={snackbarMessage}
               style={{
-                width: 80,
-                height: 80,
-                objectFit: "cover",
-                borderRadius: 4,
-                marginTop: 8,
+                backgroundColor: snackbarSeverity === "success" ? "green" : "red",
               }}
             />
-          )}
-        </Grid>
-      </>
-    )}
+          </Snackbar>
+          <Grid container spacing={2} sx={{ width: "100%" }}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label={addCategory ? "Category Name" : "Product Name"}
+                variant="outlined"
+                value={productName}
+                onChange={(e) => setProductName(e.target.value)}
+              />
+            </Grid>
 
-    {!addCategory && (
-      <>
-        <Grid item xs={12}>
-          <FormControl fullWidth>
-            <InputLabel id="brand-select-label">Brand</InputLabel>
-            <Select
-              labelId="brand-select-label"
-              value={brand}
-              label="Brand"
-              onChange={(e) => setBrand(e.target.value)}
-            >
-              <MenuItem value="">
-                <em>None</em>
-              </MenuItem>
-              {brands.map((b) => (
-                <MenuItem key={b._id} value={b._id}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    {b.logo && (
-                      <img 
-                        src={`https://api.deenitaindia.com${b.logo}`} 
-                        alt={b.name} 
-                        style={{ width: 20, height: 20, borderRadius: '50%' }} 
-                      />
-                    )}
-                    {b.name}
-                  </Box>
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid item xs={12}>
-          <ReactQuill
-            theme="snow"
-            value={description}
-            onChange={(value) => setDescription(value)}
-            placeholder="Enter product description..."
-            style={{ background: "#fff", borderRadius: 4 }}
-          />
-        </Grid>
-
-        <Grid item xs={12}>
-          <p className="text-red-500 text-sm font-medium mt-1">
-            * You can select multiple images (Hold Ctrl/Cmd to select)
-          </p>        
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={handleImageUpload}
-            style={{ marginTop: 8 }}
-          />
-          <Grid container spacing={1} sx={{ mt: 1 }}>
-            {previewImages.map((img, idx) => (
-              <Grid item key={idx}>
-                <img
-                  src={img}
-                  alt={`preview-${idx}`}
-                  style={{
-                    width: 60,
-                    height: 60,
-                    objectFit: "cover",
-                    borderRadius: 4,
-                  }}
-                />
-              </Grid>
-            ))}
-          </Grid>
-        </Grid>
-
-        <Grid item xs={6}>
-          <TextField
-            fullWidth
-            label="Price"
-            variant="outlined"
-            type="text"
-            inputProps={{ min: 0 }}
-            value={price}
-            onChange={(e) => {
-              const value = Number(e.target.value);
-              setPrice(value >= 0 ? value : 0);
-            }}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Material"
-            variant="outlined"
-            value={material}
-            onChange={(e) => setMaterial(e.target.value)}
-          />
-        </Grid>
-            
-        <Grid item xs={12}>
-          <strong>Sizes & Prices</strong>
-        </Grid>
-
-        {Array.isArray(sizes) &&
-          sizes.map((item, index) => (
-            <Box key={index} sx={{ border: "1px solid #ddd", p: 2, mb: 2, borderRadius: 2 }}>
-              <Grid container spacing={2} alignItems="center">
-                {/* Size Input */}
-                <Grid item xs={5}>
-                  <TextField
-                    fullWidth label="Size (e.g. XL)"
-                    variant="outlined"
-                    value={item.sizes}
-                    onChange={(e) => {
-                      const updated = [...sizes];
-                      updated[index].sizes = e.target.value;
-                      setSizes(updated);
-                    }}
-                  />
-                </Grid>
-
-                {/* Price Input */}
-                <Grid item xs={5}>
-                  <TextField
-                    fullWidth label="Price"
-                    variant="outlined"
-                    type="number"
-                    value={item.price}
-                    onChange={(e) => {
-                      const updated = [...sizes];
-                      updated[index].price = Number(e.target.value);
-                      setSizes(updated);
-                    }}
-                  />
-                </Grid>
-
-                {/* Add/Remove Size Row */}
-                <Grid item xs={2}>
-                  <IconButton
-                    onClick={() => {
-                      if (index === sizes.length - 1) {
-                        setSizes([...sizes, { sizes: "", price: 0, colors: [""] }]);
-                      } else {
-                        setSizes(sizes.filter((_, i) => i !== index));
-                      }
-                    }}
-                  >
-                    {index === sizes.length - 1 ? <AddIcon /> : <DeleteIcon color="error" />}
-                  </IconButton>
-                </Grid>
-
-                {/* --- Nested Colors Section for this specific Size --- */}
+            {addCategory && (
+              <>
                 <Grid item xs={12}>
-                  <Typography variant="body2" sx={{ fontWeight: "bold", mb: 1 }}>
-                    Available Colors for this size:
-                  </Typography>
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                    {/* (item.colors || [""]) ensures ki loop empty na ho */}
-                    {(item.colors || [""]).map((col, colIdx) => (
-                      <Box key={colIdx} sx={{ display: "flex", alignItems: "center" }}>
-                        <TextField
-                          size="small"
-                          label={`Color ${colIdx + 1}`}
-                          placeholder="e.g. Blue"
-                          value={col}
-                          sx={{ width: "130px" }}
-                          onChange={(e) => {
-                            const updated = [...sizes];
-                            if (!updated[index].colors) updated[index].colors = [""];
-                            updated[index].colors[colIdx] = e.target.value;
-                            setSizes(updated);
+                  <FormControl fullWidth>
+                    <InputLabel id="subcategory-label">Add Sub Category</InputLabel>
+                    <Select
+                      labelId="subcategory-label"
+                      value={subcategory}
+                      onChange={(e) => setSubCategory(e.target.value)}
+                    >
+                      {Object.keys(groupedCategories).map((key) => (
+                        <MenuItem key={key} value={key}>
+                          {key}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Description (optional)"
+                    variant="outlined"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleCategoryImageUpload}
+                    style={{ marginTop: 8 }}
+                  />
+                  {categoryPreview && (
+                    <img
+                      src={categoryPreview}
+                      alt="category-preview"
+                      style={{
+                        width: 80,
+                        height: 80,
+                        objectFit: "cover",
+                        borderRadius: 4,
+                        marginTop: 8,
+                      }}
+                    />
+                  )}
+                </Grid>
+              </>
+            )}
+
+            {!addCategory && (
+              <>
+                <Grid item xs={12}>
+                  <FormControl fullWidth>
+                    <InputLabel id="brand-select-label">Brand</InputLabel>
+                    <Select
+                      labelId="brand-select-label"
+                      value={brand}
+                      label="Brand"
+                      onChange={(e) => setBrand(e.target.value)}
+                    >
+                      <MenuItem value="">
+                        <em>None</em>
+                      </MenuItem>
+                      {brands.map((b) => (
+                        <MenuItem key={b._id} value={b._id}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {b.logo && (
+                              <img
+                                src={`https://api.deenitaindia.com${b.logo}`}
+                                alt={b.name}
+                                style={{ width: 20, height: 20, borderRadius: '50%' }}
+                              />
+                            )}
+                            {b.name}
+                          </Box>
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12}>
+                  <ReactQuill
+                    theme="snow"
+                    value={description}
+                    onChange={(value) => setDescription(value)}
+                    placeholder="Enter product description..."
+                    style={{ background: "#fff", borderRadius: 4 }}
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <p className="text-red-500 text-sm font-medium mt-1">
+                    * You can select multiple images (Hold Ctrl/Cmd to select)
+                  </p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageUpload}
+                    style={{ marginTop: 8 }}
+                  />
+                  <Grid container spacing={1} sx={{ mt: 1 }}>
+                    {previewImages.map((img, idx) => (
+                      <Grid item key={idx}>
+                        <img
+                          src={img}
+                          alt={`preview-${idx}`}
+                          style={{
+                            width: 60,
+                            height: 60,
+                            objectFit: "cover",
+                            borderRadius: 4,
                           }}
                         />
-                        <IconButton
-                          size="small"
-                          onClick={() => {
-                            const updated = [...sizes];
-                            if (!updated[index].colors) updated[index].colors = [""];
-                            
-                            if (colIdx === updated[index].colors.length - 1) {
-                              updated[index].colors.push(""); 
-                            } else {
-                              updated[index].colors = updated[index].colors.filter((_, i) => i !== colIdx);
-                            }
-                            setSizes(updated);
-                          }}
-                        >
-                          {colIdx === (item.colors?.length || 1) - 1 ? (
-                            <AddIcon fontSize="small" />
-                          ) : (
-                            <DeleteIcon fontSize="small" color="error" />
-                          )}
-                        </IconButton>
-                      </Box>
+                      </Grid>
                     ))}
+                  </Grid>
+                </Grid>
+
+                <Grid item xs={6}>
+                  <TextField
+                    fullWidth
+                    label="Price"
+                    variant="outlined"
+                    type="text"
+                    inputProps={{ min: 0 }}
+                    value={price}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      setPrice(value >= 0 ? value : 0);
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Material"
+                    variant="outlined"
+                    value={material}
+                    onChange={(e) => setMaterial(e.target.value)}
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <strong>Sizes & Prices</strong>
+                </Grid>
+
+                {Array.isArray(sizes) &&
+                  sizes.map((item, index) => (
+                    <Box key={index} sx={{ border: "1px solid #ddd", p: 2, mb: 2, borderRadius: 2 }}>
+                      <Grid container spacing={2} alignItems="center">
+                        {/* Size Input */}
+                        <Grid item xs={5}>
+                          <TextField
+                            fullWidth label="Size (e.g. XL)"
+                            variant="outlined"
+                            value={item.sizes}
+                            onChange={(e) => {
+                              const updated = [...sizes];
+                              updated[index].sizes = e.target.value;
+                              setSizes(updated);
+                            }}
+                          />
+                        </Grid>
+
+                        {/* Price Input */}
+                        <Grid item xs={5}>
+                          <TextField
+                            fullWidth label="Price"
+                            variant="outlined"
+                            type="number"
+                            value={item.price}
+                            onChange={(e) => {
+                              const updated = [...sizes];
+                              updated[index].price = Number(e.target.value);
+                              setSizes(updated);
+                            }}
+                          />
+                        </Grid>
+
+                        {/* Add/Remove Size Row */}
+                        <Grid item xs={2}>
+                          <IconButton
+                            onClick={() => {
+                              if (index === sizes.length - 1) {
+                                setSizes([...sizes, { sizes: "", price: 0, colors: [""] }]);
+                              } else {
+                                setSizes(sizes.filter((_, i) => i !== index));
+                              }
+                            }}
+                          >
+                            {index === sizes.length - 1 ? <AddIcon /> : <DeleteIcon color="error" />}
+                          </IconButton>
+                        </Grid>
+
+                        {/* --- Nested Colors Section for this specific Size --- */}
+                        <Grid item xs={12}>
+                          <Typography variant="body2" sx={{ fontWeight: "bold", mb: 1 }}>
+                            Available Colors for this size:
+                          </Typography>
+                          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                            {/* (item.colors || [""]) ensures ki loop empty na ho */}
+                            {(item.colors || [""]).map((col, colIdx) => (
+                              <Box key={colIdx} sx={{ display: "flex", alignItems: "center" }}>
+                                <TextField
+                                  size="small"
+                                  label={`Color ${colIdx + 1}`}
+                                  placeholder="e.g. Blue"
+                                  value={col}
+                                  sx={{ width: "130px" }}
+                                  onChange={(e) => {
+                                    const updated = [...sizes];
+                                    if (!updated[index].colors) updated[index].colors = [""];
+                                    updated[index].colors[colIdx] = e.target.value;
+                                    setSizes(updated);
+                                  }}
+                                />
+                                <IconButton
+                                  size="small"
+                                  onClick={() => {
+                                    const updated = [...sizes];
+                                    if (!updated[index].colors) updated[index].colors = [""];
+
+                                    if (colIdx === updated[index].colors.length - 1) {
+                                      updated[index].colors.push("");
+                                    } else {
+                                      updated[index].colors = updated[index].colors.filter((_, i) => i !== colIdx);
+                                    }
+                                    setSizes(updated);
+                                  }}
+                                >
+                                  {colIdx === (item.colors?.length || 1) - 1 ? (
+                                    <AddIcon fontSize="small" />
+                                  ) : (
+                                    <DeleteIcon fontSize="small" color="error" />
+                                  )}
+                                </IconButton>
+                              </Box>
+                            ))}
+                          </Box>
+                        </Grid>
+                      </Grid>
+                    </Box>
+                  ))}
+
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Discount (%)"
+                    variant="outlined"
+                    type="text"
+                    inputProps={{ min: 0 }}
+                    value={discount}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      setDiscount(value >= 0 ? value : 0);
+                    }}
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <FormControl fullWidth>
+                    <InputLabel>Category</InputLabel>
+                    <Select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                    >
+                      {categories.map((cat) => (
+                        <MenuItem key={cat._id} value={cat._id}>
+                          {cat.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Stock Quantity"
+                    variant="outlined"
+                    type="text"
+                    inputProps={{ min: 0 }}
+                    value={inStock}
+                    onChange={(e) => setInStock(Number(e.target.value))}
+                  />
+                </Grid>
+
+                {/* --- NEW FIELDS: POPULAR, TRENDING, FEATURED, NEW ARRIVAL --- */}
+                <Grid item xs={12}>
+                  <Box sx={{ p: 1, border: '1px solid #ccc', borderRadius: 1 }}>
+                    <Typography variant="body2" sx={{ mb: 1, fontWeight: 'bold', color: '#555' }}>
+                      Product Visibility Options
+                    </Typography>
+                    <Grid container spacing={0}>
+                      <Grid item xs={6} sm={3}>
+                        <FormControlLabel
+                          control={<Checkbox checked={isPopular} onChange={(e) => setIsPopular(e.target.checked)} />}
+                          label="Popular"
+                        />
+                      </Grid>
+                      <Grid item xs={6} sm={3}>
+                        <FormControlLabel
+                          control={<Checkbox checked={isTrending} onChange={(e) => setIsTrending(e.target.checked)} />}
+                          label="Trending"
+                        />
+                      </Grid>
+                      <Grid item xs={6} sm={3}>
+                        <FormControlLabel
+                          control={<Checkbox checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} />}
+                          label="Featured"
+                        />
+                      </Grid>
+                      <Grid item xs={6} sm={3}>
+                        <FormControlLabel
+                          control={<Checkbox checked={isNewArrival} onChange={(e) => setIsNewArrival(e.target.checked)} />}
+                          label="New"
+                        />
+                      </Grid>
+                    </Grid>
                   </Box>
                 </Grid>
-              </Grid>
-            </Box>
-        ))}
 
-        <Grid item xs={12}>
-          <TextField
-            fullWidth
-            label="Discount (%)"
-            variant="outlined"
-            type="text"
-            inputProps={{ min: 0 }}
-            value={discount}
-            onChange={(e) => {
-              const value = Number(e.target.value);
-              setDiscount(value >= 0 ? value : 0);
-            }}
-          />
-        </Grid>
-
-        <Grid item xs={12}>
-          <FormControl fullWidth>
-            <InputLabel>Category</InputLabel>
-            <Select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              {categories.map((cat) => (
-                <MenuItem key={cat._id} value={cat._id}>
-                  {cat.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={12}>
-          <TextField
-            fullWidth
-            label="Stock Quantity"
-            variant="outlined"
-            type="text"
-            inputProps={{ min: 0 }}
-            value={inStock}
-            onChange={(e) => setInStock(Number(e.target.value))}
-          />
-        </Grid>
-
-        {/* --- NEW FIELDS: POPULAR, TRENDING, FEATURED, NEW ARRIVAL --- */}
-        <Grid item xs={12}>
-          <Box sx={{ p: 1, border: '1px solid #ccc', borderRadius: 1 }}>
-            <Typography variant="body2" sx={{ mb: 1, fontWeight: 'bold', color: '#555' }}>
-              Product Visibility Options
-            </Typography>
-            <Grid container spacing={0}>
-              <Grid item xs={6} sm={3}>
-                <FormControlLabel
-                  control={<Checkbox checked={isPopular} onChange={(e) => setIsPopular(e.target.checked)} />}
-                  label="Popular"
-                />
-              </Grid>
-              <Grid item xs={6} sm={3}>
-                <FormControlLabel
-                  control={<Checkbox checked={isTrending} onChange={(e) => setIsTrending(e.target.checked)} />}
-                  label="Trending"
-                />
-              </Grid>
-              <Grid item xs={6} sm={3}>
-                <FormControlLabel
-                  control={<Checkbox checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} />}
-                  label="Featured"
-                />
-              </Grid>
-              <Grid item xs={6} sm={3}>
-                <FormControlLabel
-                  control={<Checkbox checked={isNewArrival} onChange={(e) => setIsNewArrival(e.target.checked)} />}
-                  label="New"
-                />
-              </Grid>
-            </Grid>
-          </Box>
-        </Grid>
-
-        {/* --- NEW FIELD: TAGS --- */}
-        {/* <Grid item xs={12}>
+                {/* --- NEW FIELD: TAGS --- */}
+                {/* <Grid item xs={12}>
           <TextField
             fullWidth
             label="Search Tags"
@@ -680,11 +685,11 @@ console.log("isProductInvalid:", isProductInvalid);
             helperText="Separate tags with commas (,)"
           />
         </Grid> */}
-      </>
-    )}
-  </Grid>
-  
-</DialogContent>
+              </>
+            )}
+          </Grid>
+
+        </DialogContent>
 
         <DialogActions>
           <Button onClick={handleClose} color="secondary">
@@ -696,7 +701,7 @@ console.log("isProductInvalid:", isProductInvalid);
         </DialogActions>
       </Dialog>
 
-     
+
     </div>
   );
 };
